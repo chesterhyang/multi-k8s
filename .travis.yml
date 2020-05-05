@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t chesterhyang/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run chesterhyang/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t chesterhyang/multi-client ./client
+  - docker build -t chesterhyang/multi-nginx ./nginx
+  - docker build -t chesterhyang/multi-server ./server
+  - docker build -t chesterhyang/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push chesterhyang/multi-client
+  - docker push chesterhyang/multi-nginx
+  - docker push chesterhyang/multi-server
+  - docker push chesterhyang/multi-worker
